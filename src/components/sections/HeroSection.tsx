@@ -40,10 +40,10 @@ const HeroSection: React.FC = () => {
         transition={{ duration: 0.5, delay: 0.4 }}
         className="flex flex-col sm:flex-row items-center gap-4"
       >
-        <button className="h-12 px-8 rounded-xl bg-white text-black font-semibold flex items-center gap-2 hover:bg-zinc-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:scale-105 active:scale-95">
+        <a href="/workspace" className="h-12 px-8 rounded-xl bg-white text-black font-semibold flex items-center gap-2 hover:bg-zinc-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:scale-105 active:scale-95">
           Start Building Free
           <ArrowRight className="w-4 h-4" />
-        </button>
+        </a>
         <button className="h-12 px-8 rounded-xl bg-card border border-card-border text-white font-medium hover:bg-zinc-800 transition-colors">
           View Components
         </button>

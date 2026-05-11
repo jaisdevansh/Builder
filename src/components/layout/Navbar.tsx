@@ -28,9 +28,9 @@ const Navbar: React.FC = () => {
           <button className="text-sm font-medium text-zinc-300 hover:text-white transition-colors hidden sm:block">
             Sign In
           </button>
-          <button className="bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-200 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+          <a href="/workspace" className="bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-200 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.3)]">
             Go to Workspace
-          </button>
+          </a>
         </div>
       </div>
     </motion.nav>

@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
+import Workspace from './pages/Workspace';
 
 function App() {
   return (
@@ -7,7 +8,7 @@ function App() {
       <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          {/* Workspace Route will be added in Phase 2 */}
+          <Route path="/workspace" element={<Workspace />} />
         </Routes>
       </div>
     </Router>
