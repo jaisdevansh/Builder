@@ -1,3 +1,8 @@
+# Add .env to gitignore to prevent committing secrets
+.env
+.env.local
+.env.production
+
 # Logs
 logs
 *.log
@@ -22,3 +27,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Prisma
+prisma/migrations/dev.db*

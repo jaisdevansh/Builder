@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String          @id @default(uuid())
+  name          String?
+  email         String          @unique
+  image         String?
+  password      String?         // hashed password for email/password auth
+  provider      String?         @default("email") // "email" | "google" | "github"
+  emailVerified DateTime?       // set when email is verified
+  created_at    DateTime        @default(now())
+  
+  projects      Project[]
+  promptHistory PromptHistory[]
+
+  @@map("users")
+}
+
+model Project {
+  id             String           @id @default(uuid())
+  user_id        String
+  title          String
+  prompt         String
+  theme          String           @default("dark")
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
+
+  user           User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  files          GeneratedFile[]
+  ai_generations AiGeneration[]
+
+  @@index([user_id])
+  @@map("projects")
+}
+
+model GeneratedFile {
+  id         String   @id @default(uuid())
+  project_id String
+  file_name  String
+  content    String   @db.Text
+  file_type  String
+
+  project    Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@index([project_id])
+  @@map("generated_files")
+}
+
+model PromptHistory {
+  id            String   @id @default(uuid())
+  user_id       String
+  prompt        String   @db.Text
+  response_time Int      // time in ms
+  created_at    DateTime @default(now())
+
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("prompt_history")
+}
+
+model AiGeneration {
+  id              String   @id @default(uuid())
+  project_id      String
+  provider        String   // 'gemini' | 'groq'
+  tokens_used     Int
+  generation_time Int      // time in ms
+
+  project         Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@index([project_id])
+  @@map("ai_generations")
+}
