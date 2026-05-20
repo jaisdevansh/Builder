@@ -1,7 +1,18 @@
-# Add .env to gitignore to prevent committing secrets
+# ============================================
+# ENV FILES - NEVER COMMIT THESE!
+# ============================================
 .env
 .env.local
 .env.production
+.env.development
+.env.staging
+.env.test
+*/.env
+*/.env.local
+*/.env.production
+*/.env.development
+*/.env.staging
+*/.env.test
 
 # Logs
 logs

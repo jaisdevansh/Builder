@@ -48,9 +48,7 @@ http://localhost:3000/auth/callback
 3. Should now work without errors
 
 ## Current Client ID
-```
-602310131786-avvldn2r8u6m0ur9o19t6spf7ctett58.apps.googleusercontent.com
-```
+Use the Client ID stored in your `client/.env` file as `VITE_GOOGLE_CLIENT_ID`.
 
 ## Alternative: Create New OAuth Client
 If you can't edit the existing client:
