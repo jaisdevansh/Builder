@@ -55,6 +55,11 @@ try {
 const maskedUrl = poolConfig.connectionString.replace(/:[^@:]+@/, ':****@');
 console.log(`📡 Prisma attempting to connect with (pg adapter): ${maskedUrl}`);
 
+poolConfig.connectionTimeoutMillis = 30000;
+poolConfig.idleTimeoutMillis = 300000;
+poolConfig.max = 10;
+poolConfig.keepAlive = true;
+
 const pool = new pg.Pool(poolConfig);
 const adapter = new PrismaPg(pool);
 

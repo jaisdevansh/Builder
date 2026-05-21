@@ -222,6 +222,116 @@ export const emailLogin = async (request, reply) => {
 };
 
 // ─────────────────────────────────────────────
+// EMAIL — Forgot Password
+// ─────────────────────────────────────────────
+import nodemailer from 'nodemailer';
+
+export const forgotPassword = async (request, reply) => {
+  const { email } = request.body;
+
+  if (!email) {
+    return reply.status(400).send({ success: false, error: 'Email is required' });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      // Return success anyway to prevent email enumeration attacks
+      return { success: true, message: 'If an account exists, a reset link was sent.' };
+    }
+
+    // Generate a reset token valid for 1 hour
+    const resetToken = await request.server.jwt.sign(
+      { id: user.id, purpose: 'password_reset' },
+      { expiresIn: '1h' }
+    );
+
+    const resetUrl = `${FRONTEND_URL}/auth/reset-password?token=${resetToken}`;
+
+    // Create a Nodemailer test account (Ethereal) if no real SMTP provided
+    let transporter;
+    if (process.env.SMTP_HOST) {
+      transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        secure: false, // true for 465, false for other ports
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+      });
+    } else {
+      // Fallback: Create ethereal test account for local dev
+      let testAccount = await nodemailer.createTestAccount();
+      transporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false,
+        auth: { user: testAccount.user, pass: testAccount.pass },
+      });
+    }
+
+    const info = await transporter.sendMail({
+      from: '"Buildify AI" <noreply@buildify.ai>',
+      to: user.email,
+      subject: 'Reset Your Password',
+      html: `
+        <h2>Password Reset Request</h2>
+        <p>You requested to reset your password. Click the link below to set a new one:</p>
+        <a href="${resetUrl}" style="padding: 10px 15px; background: #2563eb; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
+        <p><small>If you didn't request this, you can safely ignore this email.</small></p>
+      `,
+    });
+
+    if (!process.env.SMTP_HOST) {
+      console.log('✉️ Preview Password Reset Email URL: %s', nodemailer.getTestMessageUrl(info));
+    }
+
+    return { success: true, message: 'Password reset email sent.' };
+  } catch (error) {
+    request.log.error(error, 'Forgot password error');
+    return reply.status(500).send({ success: false, error: 'Failed to process request.' });
+  }
+};
+
+// ─────────────────────────────────────────────
+// EMAIL — Reset Password
+// ─────────────────────────────────────────────
+export const resetPassword = async (request, reply) => {
+  const { token, newPassword } = request.body;
+
+  if (!token || !newPassword) {
+    return reply.status(400).send({ success: false, error: 'Token and new password are required' });
+  }
+  if (newPassword.length < 8) {
+    return reply.status(400).send({ success: false, error: 'Password must be at least 8 characters' });
+  }
+
+  try {
+    // Verify the JWT token
+    const decoded = await request.server.jwt.verify(token);
+    
+    if (decoded.purpose !== 'password_reset' || !decoded.id) {
+      return reply.status(400).send({ success: false, error: 'Invalid or expired reset token' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    if (!user) {
+      return reply.status(404).send({ success: false, error: 'User not found' });
+    }
+
+    // Update password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    return { success: true, message: 'Password has been successfully reset.' };
+  } catch (error) {
+    request.log.error(error, 'Reset password error');
+    return reply.status(400).send({ success: false, error: 'Invalid or expired reset token' });
+  }
+};
+
+// ─────────────────────────────────────────────
 // HELPER — strip password from user object
 // ─────────────────────────────────────────────
 function safeUser(user) {

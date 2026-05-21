@@ -4,6 +4,8 @@ import {
   githubCallback,
   emailSignup,
   emailLogin,
+  forgotPassword,
+  resetPassword
 } from '../controllers/auth.controller.js';
 import prisma from '../db/prisma.js';
 
@@ -25,6 +27,12 @@ export default async function authRoutes(fastify, options) {
 
   // POST /api/auth/login
   fastify.post('/auth/login', emailLogin);
+
+  // POST /api/auth/forgot-password
+  fastify.post('/auth/forgot-password', forgotPassword);
+
+  // POST /api/auth/reset-password
+  fastify.post('/auth/reset-password', resetPassword);
 
   // ── Protected helpers ───────────────────────────────
   fastify.get('/auth/status', {

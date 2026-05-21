@@ -6,10 +6,10 @@ import {
 } from "@codesandbox/sandpack-react";
 import { atomDark } from "@codesandbox/sandpack-themes";
 import { useStore } from '../../store/useStore';
-import { Monitor, Smartphone, RotateCw } from 'lucide-react';
+import { Monitor, Smartphone, RotateCw, X, Minus, Maximize2 } from 'lucide-react';
 
 const LivePreview: React.FC = () => {
-  const { files, isGenerating } = useStore();
+  const { files, isGenerating, previewLayout, setPreviewLayout } = useStore();
   const [viewport, setViewport] = useState<'desktop' | 'mobile'>('desktop');
   const [refreshKey, setRefreshKey] = useState(0);
   
@@ -28,10 +28,16 @@ const LivePreview: React.FC = () => {
     <div className="flex-1 h-full bg-[#0a0a0c] flex flex-col border-l border-white/5">
       {/* Browser Bar */}
       <div className="h-12 bg-zinc-900 border-b border-white/5 flex items-center justify-between px-4">
-        <div className="flex gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500/80" />
-          <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-          <div className="w-3 h-3 rounded-full bg-green-500/80" />
+        <div className="flex gap-2 group">
+          <button onClick={() => setPreviewLayout('code-maximized')} className="w-3 h-3 rounded-full bg-[#ff5f56] flex items-center justify-center overflow-hidden hover:scale-105 active:scale-95 transition-transform">
+            <X className="w-2 h-2 text-black/70 opacity-0 group-hover:opacity-100 transition-opacity stroke-[3]" />
+          </button>
+          <button onClick={() => setPreviewLayout(previewLayout === 'split' ? 'code-maximized' : 'split')} className="w-3 h-3 rounded-full bg-[#ffbd2e] flex items-center justify-center overflow-hidden hover:scale-105 active:scale-95 transition-transform">
+            <Minus className="w-2 h-2 text-black/70 opacity-0 group-hover:opacity-100 transition-opacity stroke-[3]" />
+          </button>
+          <button onClick={() => setPreviewLayout(previewLayout === 'preview-maximized' ? 'split' : 'preview-maximized')} className="w-3 h-3 rounded-full bg-[#27c93f] flex items-center justify-center overflow-hidden hover:scale-105 active:scale-95 transition-transform">
+            <Maximize2 className="w-2 h-2 text-black/70 opacity-0 group-hover:opacity-100 transition-opacity stroke-[3] p-[0.5px]" />
+          </button>
         </div>
         
         <div className="flex items-center bg-black/40 px-3 py-1.5 rounded-md border border-white/5 w-1/2 max-w-sm overflow-hidden">

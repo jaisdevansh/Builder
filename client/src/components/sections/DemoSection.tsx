@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { X, Minus, Maximize2 } from 'lucide-react';
 
 const DemoSection: React.FC = () => {
   return (
@@ -16,10 +17,16 @@ const DemoSection: React.FC = () => {
         
         {/* Mock Window Header */}
         <div className="relative flex items-center px-4 py-3 border-b border-white/5 bg-zinc-900/50 rounded-t-xl md:rounded-t-2xl">
-          <div className="flex gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500/80" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-            <div className="w-3 h-3 rounded-full bg-green-500/80" />
+          <div className="flex gap-2 group cursor-default">
+            <div className="w-3 h-3 rounded-full bg-[#ff5f56] flex items-center justify-center overflow-hidden">
+              <X className="w-2 h-2 text-black/70 opacity-0 group-hover:opacity-100 transition-opacity stroke-[3]" />
+            </div>
+            <div className="w-3 h-3 rounded-full bg-[#ffbd2e] flex items-center justify-center overflow-hidden">
+              <Minus className="w-2 h-2 text-black/70 opacity-0 group-hover:opacity-100 transition-opacity stroke-[3]" />
+            </div>
+            <div className="w-3 h-3 rounded-full bg-[#27c93f] flex items-center justify-center overflow-hidden">
+              <Maximize2 className="w-2 h-2 text-black/70 opacity-0 group-hover:opacity-100 transition-opacity stroke-[3] p-[0.5px]" />
+            </div>
           </div>
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center bg-black/40 px-3 py-1 rounded-md border border-white/5 text-xs text-zinc-500">
             <span className="text-zinc-400 mr-2">buildify.ai</span> / workspace

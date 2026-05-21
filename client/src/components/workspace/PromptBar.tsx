@@ -1,14 +1,18 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Sparkles, Paperclip, X, FileImage } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useStore, type FileData } from '../../store/useStore';
+import { useSearchParams } from 'react-router-dom';
 
 const PromptBar: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
-  const { setGenerating, isGenerating, addPrompt } = useStore();
+  const { setGenerating, isGenerating, addPrompt, activeFile, updateFileContent } = useStore();
+  const [searchParams] = useSearchParams();
+  const projectId = searchParams.get('project');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -42,11 +46,11 @@ const PromptBar: React.FC = () => {
         setPrompt(result.data.enhancedPrompt);
       } else {
         console.error('Enhancement failed:', result.error);
-        alert(result.error || 'Failed to enhance prompt. Please try again.');
+        toast.error(result.error || 'Failed to enhance prompt. Please try again.');
       }
     } catch (error) {
       console.error('Error calling enhance API:', error);
-      alert('An error occurred during enhancement. Please check your connection.');
+      toast.error('An error occurred during enhancement. Please check your connection.');
     } finally {
       setIsEnhancing(false);
     }
@@ -69,35 +73,53 @@ const PromptBar: React.FC = () => {
     setAttachedFiles([]);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ prompt: enrichedPrompt })
-      });
+      if (projectId) {
+        // Edit existing project
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/projects/${projectId}/edit`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ prompt: enrichedPrompt, activeFile })
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (result.success && result.data.files) {
-        const formattedFiles = Object.entries(result.data.files as Record<string, string>).reduce<Record<string, FileData>>((acc, [name, code]) => {
-          acc[`/${name}`] = { name, code };
-          return acc;
-        }, {});
-
-        useStore.getState().setFiles(formattedFiles);
-        if (result.data.projectName) {
-          useStore.getState().setProjectTitle(result.data.projectName);
+        if (result.success && result.data.code) {
+          updateFileContent(result.data.file_name, result.data.code);
+          toast.success('File edited successfully!');
+        } else {
+          console.error('Edit failed:', result.error);
+          toast.error(result.error || 'Failed to edit code. Please try again.');
         }
-        useStore.getState().setActiveFile('/App.tsx');
       } else {
-        console.error('Generation failed:', result.error);
-        alert(result.error || 'Failed to generate UI. Please try again.');
+        // Generate new project
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ prompt: enrichedPrompt })
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.data.files) {
+          useStore.getState().setFiles(result.data.files as Record<string, FileData>);
+          if (result.data.projectName) {
+            useStore.getState().setProjectTitle(result.data.projectName);
+          }
+          useStore.getState().setActiveFile('/App.tsx');
+        } else {
+          console.error('Generation failed:', result.error);
+          toast.error(result.error || 'Failed to generate UI. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Error calling generate API:', error);
-      alert('An error occurred during generation. Please check your connection.');
+      toast.error('An error occurred during generation. Please check your connection.');
     } finally {
       setGenerating(false);
     }

@@ -24,7 +24,7 @@
 /* Glassmorphism utilities */
 @layer utilities {
   .glass {
-    background: theme('colors.card.DEFAULT', theme('colors.card'));
+    background: theme('colors.card.DEFAULT');
     backdrop-filter: blur(12px);
     border: 1px solid theme('colors.card.border');
   }

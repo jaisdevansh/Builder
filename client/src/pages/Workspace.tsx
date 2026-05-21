@@ -14,7 +14,7 @@ interface ProjectFile {
 
 const Workspace: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const { theme, toggleTheme, files, projectTitle, setFiles, setProjectTitle, setActiveFile } = useStore();
+  const { theme, toggleTheme, files, projectTitle, setFiles, setProjectTitle, setActiveFile, previewLayout } = useStore();
   const projectId = searchParams.get('project');
 
   useEffect(() => {
@@ -117,18 +117,30 @@ const Workspace: React.FC = () => {
         {/* 2-Pane Editor & Preview */}
         <div className="flex-1 flex min-h-0 overflow-hidden relative">
           {/* Editor Pane (Left half) */}
-          <div className="w-1/2 h-full flex flex-col min-h-0 border-r border-white/5">
+          <div 
+            className={`h-full flex flex-col min-h-0 border-r border-white/5 transition-all duration-500 ease-in-out ${
+              previewLayout === 'code-maximized' ? 'w-full' :
+              previewLayout === 'preview-maximized' ? 'w-0 border-none overflow-hidden opacity-0' :
+              'w-1/2'
+            }`}
+          >
             <CodeEditor />
           </div>
 
           {/* Preview Pane (Right half) */}
-          <div className="w-1/2 h-full flex flex-col min-h-0">
+          <div 
+            className={`h-full flex flex-col min-h-0 transition-all duration-500 ease-in-out ${
+              previewLayout === 'preview-maximized' ? 'w-full' :
+              previewLayout === 'code-maximized' ? 'w-0 overflow-hidden opacity-0' :
+              'w-1/2'
+            }`}
+          >
             <LivePreview />
           </div>
         </div>
 
         {/* Floating Prompt Input */}
-        <PromptBar />
+        {previewLayout !== 'preview-maximized' && <PromptBar />}
       </div>
     </div>
   );

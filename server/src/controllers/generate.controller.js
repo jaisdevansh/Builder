@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { generateWebsite } from '../services/generation.service.js';
+import { enhanceUserPrompt } from '../ai/index.js';
 
 // Zod schema for request validation
 const generateSchema = z.object({
-  prompt: z.string().min(5, "Prompt is too short").max(1000, "Prompt is too long"),
+  prompt: z.string().min(5, "Prompt is too short").max(10000, "Prompt is too long"),
 });
 
 export const generateController = async (request, reply) => {
@@ -23,7 +24,7 @@ export const generateController = async (request, reply) => {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return reply.status(400).send({ success: false, error: error.errors[0].message });
+      return reply.status(400).send({ success: false, error: error.issues?.[0]?.message || 'Invalid input parameters' });
     }
     
     // Handle quota/rate limit errors with user-friendly messages
@@ -50,10 +51,6 @@ export const enhancePromptController = async (request, reply) => {
 
     request.log.info({ promptLength: prompt.length, userId: request.user?.id }, 'Starting prompt enhancement');
     
-    // Import here or at top. Since it's a dynamic module, better to import at top, but we can do dynamic import to be safe if it's not exported. Wait, I should just import it at the top of the file using multi_replace.
-    // Let me just dynamic import it here.
-    const { enhanceUserPrompt } = await import('../ai/nvidia.service.js');
-    
     const enhancedPrompt = await enhanceUserPrompt(prompt);
 
     return reply.status(200).send({
@@ -63,7 +60,7 @@ export const enhancePromptController = async (request, reply) => {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return reply.status(400).send({ success: false, error: error.errors[0].message });
+      return reply.status(400).send({ success: false, error: error.issues?.[0]?.message || 'Invalid input parameters' });
     }
     
     request.log.error(error, 'Prompt Enhancement Controller Error');

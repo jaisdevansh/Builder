@@ -8,6 +8,7 @@ import { useAuthStore } from './store/useAuthStore';
 const LandingPage = React.lazy(() => import('./pages/LandingPage'));
 const AuthPage = React.lazy(() => import('./pages/AuthPage'));
 const AuthCallback = React.lazy(() => import('./pages/AuthCallback'));
+const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
 const Workspace = React.lazy(() => import('./pages/Workspace'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 
@@ -36,6 +37,7 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/auth/reset-password" element={<ResetPassword />} />
               <Route 
                 path="/workspace" 
                 element={

@@ -6,6 +6,7 @@ export interface FileData {
 }
 
 type Theme = 'dark' | 'light';
+export type PreviewLayout = 'split' | 'preview-maximized' | 'code-maximized';
 
 interface WorkspaceState {
   files: Record<string, FileData>;
@@ -14,6 +15,7 @@ interface WorkspaceState {
   promptHistory: string[];
   theme: Theme;
   projectTitle: string;
+  previewLayout: PreviewLayout;
   setActiveFile: (fileName: string) => void;
   updateFileContent: (fileName: string, content: string) => void;
   setGenerating: (status: boolean) => void;
@@ -21,6 +23,7 @@ interface WorkspaceState {
   toggleTheme: () => void;
   setFiles: (files: Record<string, FileData>) => void;
   setProjectTitle: (title: string) => void;
+  setPreviewLayout: (layout: PreviewLayout) => void;
 }
 
 const defaultFiles: Record<string, FileData> = {
@@ -85,6 +88,7 @@ export const useStore = create<WorkspaceState>((set) => ({
   promptHistory: [],
   theme: 'dark',
   projectTitle: 'Untitled Project',
+  previewLayout: 'split',
   
   setActiveFile: (fileName) => set({ activeFile: fileName }),
     
@@ -106,4 +110,6 @@ export const useStore = create<WorkspaceState>((set) => ({
   setFiles: (files) => set({ files }),
 
   setProjectTitle: (title) => set({ projectTitle: title }),
+
+  setPreviewLayout: (layout) => set({ previewLayout: layout }),
 }));

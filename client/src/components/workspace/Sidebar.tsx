@@ -57,22 +57,24 @@ const Sidebar: React.FC = () => {
         {/* Profile / Settings Popup Menu */}
         <div className="relative group">
           {/* Hidden by default, shown on group hover/focus-within */}
-          <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-900 border border-white/10 rounded-xl shadow-xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto origin-bottom">
-            <div className="p-3 border-b border-white/5 flex flex-col gap-1">
-              <span className="text-sm font-bold text-white truncate">{user?.name || 'User Account'}</span>
-              <span className="text-xs text-zinc-500 truncate">{user?.email || 'Logged in'}</span>
-            </div>
-            <div className="p-1">
-              <button 
-                onClick={() => {
-                  logout();
-                  navigate('/');
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-left"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </button>
+          <div className="absolute bottom-full left-0 right-0 pb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-bottom z-50">
+            <div className="bg-zinc-900 border border-white/10 rounded-xl shadow-xl overflow-hidden">
+              <div className="p-3 border-b border-white/5 flex flex-col gap-1">
+                <span className="text-sm font-bold text-white truncate">{user?.name || 'User Account'}</span>
+                <span className="text-xs text-zinc-500 truncate">{user?.email || 'Logged in'}</span>
+              </div>
+              <div className="p-1">
+                <button 
+                  onClick={() => {
+                    logout();
+                    navigate('/');
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-left"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </div>
             </div>
           </div>
 

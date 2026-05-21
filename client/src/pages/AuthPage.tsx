@@ -9,6 +9,8 @@ const AuthPage: React.FC = () => {
   const { isAuthenticated, isLoading, error, loginWithEmail, signup, clearError } = useAuthStore();
   
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,9 +24,9 @@ const AuthPage: React.FC = () => {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
-    // Clear errors when switching between login and signup
+    // Clear errors when switching modes
     clearError();
-  }, [isLogin, clearError]);
+  }, [isLogin, isForgotPassword, clearError]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -36,7 +38,10 @@ const AuthPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (isLogin) {
+      if (isForgotPassword) {
+        await useAuthStore.getState().forgotPassword(formData.email);
+        setResetSent(true);
+      } else if (isLogin) {
         await loginWithEmail(formData.email, formData.password);
       } else {
         await signup(formData.name, formData.email, formData.password);
@@ -91,10 +96,12 @@ const AuthPage: React.FC = () => {
             <span className="font-bold text-2xl tracking-tight text-white">Buildify AI</span>
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">
-            {isLogin ? 'Welcome Back' : 'Create Account'}
+            {isForgotPassword ? 'Reset Password' : isLogin ? 'Welcome Back' : 'Create Account'}
           </h1>
           <p className="text-zinc-400">
-            {isLogin ? 'Sign in to start building amazing websites' : 'Join thousands of builders today'}
+            {isForgotPassword 
+              ? 'Enter your email to receive a reset link' 
+              : isLogin ? 'Sign in to start building amazing websites' : 'Join thousands of builders today'}
           </p>
         </div>
 
@@ -118,7 +125,7 @@ const AuthPage: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <AnimatePresence mode="wait">
-              {!isLogin && (
+              {!isLogin && !isForgotPassword && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -131,7 +138,7 @@ const AuthPage: React.FC = () => {
                     <input
                       type="text"
                       name="name"
-                      required={!isLogin}
+                      required={!isLogin && !isForgotPassword}
                       value={formData.name}
                       onChange={handleInputChange}
                       placeholder="John Doe"
@@ -142,52 +149,76 @@ const AuthPage: React.FC = () => {
               )}
             </AnimatePresence>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="name@company.com"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 pl-10 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-                />
+            {resetSent ? (
+              <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-center">
+                <p className="text-green-400 text-sm font-medium mb-2">Check your inbox!</p>
+                <p className="text-zinc-400 text-xs">We sent a password reset link to {formData.email}</p>
+                <button 
+                  type="button" 
+                  onClick={() => { setIsForgotPassword(false); setResetSent(false); }}
+                  className="mt-4 text-sm text-blue-400 hover:underline"
+                >
+                  Back to login
+                </button>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-300">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="name@company.com"
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 pl-10 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <label className="text-sm font-medium text-zinc-300">Password</label>
-                {isLogin && (
-                  <button type="button" className="text-xs text-blue-400 hover:underline">
-                    Forgot password?
-                  </button>
+                {!isForgotPassword && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <label className="text-sm font-medium text-zinc-300">Password</label>
+                      {isLogin && (
+                        <button 
+                          type="button" 
+                          onClick={() => setIsForgotPassword(true)}
+                          className="text-xs text-blue-400 hover:underline"
+                        >
+                          Forgot password?
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                      <input
+                        type="password"
+                        name="password"
+                        required={!isForgotPassword}
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        placeholder="••••••••"
+                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 pl-10 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                      />
+                    </div>
+                  </div>
                 )}
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="••••••••"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 pl-10 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-                />
-              </div>
-            </div>
+              </>
+            )}
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? 'Sign In' : 'Create Account')}
-            </button>
+            {!resetSent && (
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isForgotPassword ? 'Send Reset Link' : isLogin ? 'Sign In' : 'Create Account')}
+              </button>
+            )}
           </form>
 
           <div className="relative my-8">
@@ -224,12 +255,12 @@ const AuthPage: React.FC = () => {
           </div>
 
           <p className="mt-8 text-center text-sm text-zinc-400">
-            {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
+            {isForgotPassword ? "Remembered your password?" : isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
             <button
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => { setIsLogin(!isLogin); setIsForgotPassword(false); setResetSent(false); }}
               className="text-blue-400 font-medium hover:underline"
             >
-              {isLogin ? 'Create one for free' : 'Sign in here'}
+              {isForgotPassword ? 'Back to login' : isLogin ? 'Create one for free' : 'Sign in here'}
             </button>
           </p>
         </motion.div>

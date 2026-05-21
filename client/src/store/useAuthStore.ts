@@ -24,6 +24,8 @@ interface AuthState {
   // Email / password
   signup: (name: string, email: string, password: string) => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
   // Shared
   logout: () => void;
   checkAuth: () => Promise<void>;
@@ -134,6 +136,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ user: data.user, token: data.token, isAuthenticated: true, isLoading: false });
     } catch (err) {
       const msg = getErrorMessage(err, 'Login failed');
+      set({ isLoading: false, error: msg });
+      throw new Error(msg, { cause: err });
+    }
+  },
+
+  // ── Forgot Password ────────────────────────────────────────────────
+  forgotPassword: async (email) => {
+    set({ isLoading: true, error: null });
+    try {
+      await axios.post(`${API_URL}/auth/forgot-password`, { email });
+      set({ isLoading: false });
+    } catch (err) {
+      const msg = getErrorMessage(err, 'Failed to send reset email');
+      set({ isLoading: false, error: msg });
+      throw new Error(msg, { cause: err });
+    }
+  },
+
+  // ── Reset Password ─────────────────────────────────────────────────
+  resetPassword: async (token, newPassword) => {
+    set({ isLoading: true, error: null });
+    try {
+      await axios.post(`${API_URL}/auth/reset-password`, { token, newPassword });
+      set({ isLoading: false });
+    } catch (err) {
+      const msg = getErrorMessage(err, 'Failed to reset password');
       set({ isLoading: false, error: msg });
       throw new Error(msg, { cause: err });
     }
