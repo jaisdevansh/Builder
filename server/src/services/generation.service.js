@@ -1,6 +1,4 @@
-import { planWebsiteStructure as planWithGemini, generateReactCode as generateReactCodeGemini } from '../ai/gemini.service.js';
-import { planWebsiteStructure as planWithGroq, generateReactCode as generateReactCodeGroq } from '../ai/groq.service.js';
-import { planWebsiteStructure as planWithNvidia, generateReactCode as generateReactCodeNvidia } from '../ai/nvidia.service.js';
+import { planWebsiteStructure, generateReactCode } from '../ai/index.js';
 import { getCache, setCache } from '../cache/redis.js';
 import prisma from '../db/prisma.js';
 
@@ -16,36 +14,16 @@ export const generateWebsite = async (prompt, userId) => {
 
   const startTime = Date.now();
 
-  // 2. Planning Phase - Try Gemini → Groq → NVIDIA (3-tier fallback)
+  // 2. Planning Phase - Handled by AI Orchestrator
   let plan;
-  let planningProvider = 'gemini';
-  
   try {
-    console.log('[Generation] Attempting to plan with Gemini...');
-    plan = await planWithGemini(prompt);
-  } catch (geminiError) {
-    const isQuotaError = 
-      geminiError.status === 429 || 
-      geminiError.message?.includes('quota') || 
-      geminiError.message?.includes('RESOURCE_EXHAUSTED');
-    
-    if (isQuotaError) {
-      console.warn('[Generation Warning] Gemini quota exceeded. Falling back to Groq for planning...');
-      planningProvider = 'groq';
-      
-      try {
-        plan = await planWithGroq(prompt);
-      } catch (groqError) {
-        console.warn('[Generation Warning] Groq also failed. Falling back to NVIDIA for planning...');
-        planningProvider = 'nvidia';
-        plan = await planWithNvidia(prompt);
-      }
-    } else {
-      throw geminiError;
-    }
+    console.log('[Generation] Attempting to plan with AI Orchestrator...');
+    plan = await planWebsiteStructure(prompt);
+    console.log('[Generation] Planning completed successfully.');
+  } catch (error) {
+    console.error('[Generation] Fatal planning error:', error.message);
+    throw error;
   }
-  
-  console.log(`[Generation] Planning completed with ${planningProvider.toUpperCase()}`);
   
   // 3. Execution Phase - Try Gemini → Groq → NVIDIA for each component
   const files = {};
@@ -65,25 +43,15 @@ export const generateWebsite = async (prompt, userId) => {
       .join('');
 
     let code;
-    let codeProvider = 'gemini';
-    
     try {
-      console.log(`[Generation] Attempting to generate ${safeName} with Gemini...`);
-      code = await generateReactCodeGemini(safeName, comp.description, plan.theme);
-    } catch (geminiError) {
-      console.warn(`[Generation Warning] Gemini failed for ${safeName}. Falling back to Groq...`);
-      codeProvider = 'groq';
-      
-      try {
-        code = await generateReactCodeGroq(safeName, comp.description, plan.theme);
-      } catch (groqError) {
-        console.warn(`[Generation Warning] Groq also failed for ${safeName}. Falling back to NVIDIA...`);
-        codeProvider = 'nvidia';
-        code = await generateReactCodeNvidia(safeName, comp.description, plan.theme);
-      }
+      console.log(`[Generation] Attempting to generate ${safeName} with AI Orchestrator...`);
+      code = await generateReactCode(safeName, comp.description, plan.theme);
+      console.log(`[Generation] ${safeName} generated successfully.`);
+    } catch (error) {
+      console.error(`[Generation Error] Failed to generate ${safeName}:`, error.message);
+      // Fallback: create an empty component if generation totally fails
+      code = `import React from 'react';\nexport default function ${safeName}() {\n  return <div className="p-4 text-red-500">Failed to generate ${safeName}</div>;\n}`;
     }
-    
-    console.log(`[Generation] ${safeName} generated with ${codeProvider.toUpperCase()}`);
     
     
     // 1. Force default export if missing

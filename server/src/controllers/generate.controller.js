@@ -43,3 +43,33 @@ export const generateController = async (request, reply) => {
     });
   }
 };
+
+export const enhancePromptController = async (request, reply) => {
+  try {
+    const { prompt } = generateSchema.parse(request.body);
+
+    request.log.info({ promptLength: prompt.length, userId: request.user?.id }, 'Starting prompt enhancement');
+    
+    // Import here or at top. Since it's a dynamic module, better to import at top, but we can do dynamic import to be safe if it's not exported. Wait, I should just import it at the top of the file using multi_replace.
+    // Let me just dynamic import it here.
+    const { enhanceUserPrompt } = await import('../ai/nvidia.service.js');
+    
+    const enhancedPrompt = await enhanceUserPrompt(prompt);
+
+    return reply.status(200).send({
+      success: true,
+      data: { enhancedPrompt }
+    });
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return reply.status(400).send({ success: false, error: error.errors[0].message });
+    }
+    
+    request.log.error(error, 'Prompt Enhancement Controller Error');
+    return reply.status(500).send({ 
+      success: false, 
+      error: 'Failed to enhance prompt. Please try again.' 
+    });
+  }
+};

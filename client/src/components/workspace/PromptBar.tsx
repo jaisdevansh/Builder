@@ -7,6 +7,7 @@ const PromptBar: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isEnhancing, setIsEnhancing] = useState(false);
   const { setGenerating, isGenerating, addPrompt } = useStore();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,6 +20,36 @@ const PromptBar: React.FC = () => {
 
   const removeFile = (index: number) => {
     setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEnhance = async () => {
+    if (!prompt.trim() || isEnhancing) return;
+    
+    setIsEnhancing(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/enhance-prompt`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ prompt })
+      });
+
+      const result = await response.json();
+      
+      if (result.success && result.data.enhancedPrompt) {
+        setPrompt(result.data.enhancedPrompt);
+      } else {
+        console.error('Enhancement failed:', result.error);
+        alert(result.error || 'Failed to enhance prompt. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error calling enhance API:', error);
+      alert('An error occurred during enhancement. Please check your connection.');
+    } finally {
+      setIsEnhancing(false);
+    }
   };
 
   const handleGenerate = async (e: React.FormEvent) => {
@@ -134,6 +165,19 @@ const PromptBar: React.FC = () => {
             }`}
           >
             <Paperclip className="w-5 h-5" />
+          </button>
+
+          {/* Enhance Prompt Button */}
+          <button
+            type="button"
+            onClick={handleEnhance}
+            disabled={!prompt.trim() || isEnhancing || isGenerating}
+            title="Enhance prompt using AI"
+            className={`p-3 transition-colors rounded-xl hover:bg-white/5 ${
+              isEnhancing ? 'animate-pulse text-purple-400' : 'text-zinc-400 hover:text-purple-400'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <Sparkles className="w-5 h-5" />
           </button>
 
           <textarea
